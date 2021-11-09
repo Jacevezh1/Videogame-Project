@@ -1,0 +1,32 @@
+
+body{
+    background-color: whitesmoke;
+    background-image: url(https://images.pexels.com/photos/3038740/pexels-photo-3038740.jpeg?cs=srgb&dl=pexels-vlado-paunovic-3038740.jpg&fm=jpg)
+}
+
+h1{
+ font-family: monospace;
+ font-size: xxx-large;
+ color: rgba(245, 97, 29, 0.883);
+}
+
+
+
+li{
+    font-family: monospace;
+    font-size: x-large;
+    color: whitesmoke;
+}
+
+
+canvas {
+    border: 20px solid whitesmoke;
+   
+    
+}
+  
+
+button{
+    background-color: rgb(241, 64, 64);
+    color:whitesmoke;
+}
