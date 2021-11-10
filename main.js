@@ -12,9 +12,11 @@ let intervalId;
 let enemies = [];
 const bullets = [];
 let isGameOver = false; 
+let coins = [];
 let score = 0;
 let lives = 1;
-/* const GRAVITY;  */
+
+
 
 
 // 3. Crear clases y sus propiedades y metodos
@@ -60,9 +62,6 @@ class BackgroundBoard extends GameAsset {
 
 
 
- 
-
-
 
 
 // Dentro de esta se genera la clase del personaje (CHARACTER)
@@ -106,7 +105,6 @@ class Impostor extends GameAsset {
 
 
     // Metodo para saber si se estan tocando mis obstaculos y mi personaje
-
     isTouching(obj) {
 		return (
 			this.x < obj.x + obj.width &&
@@ -139,6 +137,32 @@ class Obstacle { // Clase que genera las balas (OBSTACULOS)
 
 
 
+class Coins { // Clase que genera las monedas para ganar (COINS)
+    constructor(x, y, width, height, img) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.image = new Image();
+        this.image.src = "/images/eth.png";
+    }
+    
+    draw() {
+        this.x--;
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+    } 
+
+    // Metodo para saber si mi pesonaje esta tomando las monedas
+    /* isTouching(obj) {
+		return (
+			this.x < obj.x + obj.width &&
+			this.x + this.width > obj.x &&
+			this.y < obj.y + obj.height &&
+			this.y + this.height > obj.y
+		);
+	} */
+}
+
 
 
 
@@ -146,6 +170,8 @@ class Obstacle { // Clase que genera las balas (OBSTACULOS)
 
 const boardImage = "https://64.media.tumblr.com/37ae369d5ee8576431758ad00e4f2f93/tumblr_obik5y31uA1qe6rsgo1_1280.gifv";
 const board = new BackgroundBoard(0, 0, $canvas.width, $canvas.height, boardImage);
+
+// https://64.media.tumblr.com/37ae369d5ee8576431758ad00e4f2f93/tumblr_obik5y31uA1qe6rsgo1_1280.gifv
 
 
 
@@ -172,7 +198,9 @@ function update() {
     frames++; // Se actualiza el programa
     checkKeys();
     generateObstacles(); // Se generan los obstaculos
+    generateCoins(); // PENDIENTE PENDIENTE
     checkCollitions();  // Se checa si hubo colisiones
+    /* checkCoinsCollitions(); */ // Se checa si hubo colisiones entre mi moneda y mi personaje (SI = SUMA COIN)
     
  
 
@@ -183,8 +211,10 @@ function update() {
     board.draw() // Se dibuja el canvas
     actor.draw(); // Se dibuja al personaje principal
     drawEnemies(); // Se dibujan los Obstaculos //
+    drawCoins(); 
     drawScore();
     drawLives();
+    drawCollectedCoins();
     gameOver(); 
 
 }
@@ -207,6 +237,12 @@ function drawLives(){ // Funcion que me permite dibujar (VIDAS)
 
 }
 
+
+function drawCollectedCoins() { // Funcion que me permite dibujar cuantas monedas he tomado
+    ctx.font = "20px Impact"
+    ctx.fillStyle = "orange";
+    ctx.fillText(`Coins: ${coins}`, 680, 30)
+}
 
 
 
@@ -235,7 +271,7 @@ function checkCollitions() { // Funcion que checa si hubo colision de mi persona
            isGameOver = true;
            
         }
-    })
+    });
 }
 
 
@@ -251,26 +287,44 @@ function generateObstacles() { // En esta funcion se generan los obstaculos de f
         if (obs.x + obs.width < 0) enemies.splice(1, index)
     });
 
-
-    // PENDIENTE MODIFICAR PARA INCLUIR NUEVOS MONOS
-    /* if(frames === 2000){
-        const y = Math.floor(Math.random() * 470)
-        const enemie = new Obstacle($canvas.width, y, 80, 80, this.image); // MODIFICAR CANVAS WIDTH
-        enemies.push(enemie);
-    }
-
-    if(frames === 3000){
-        const y = Math.floor(Math.random() * 470)
-        const enemie = new Obstacle($canvas.width, y, 100, 100, this.image); // MODIFICAR CANVAS WIDTH
-        enemies.push(enemie);
-    } */
-
 }
 
 
 function drawEnemies() { // En esta funcion se itera cada elemento de enemies y lo imprime
     enemies.forEach((enemie) => enemie.draw())
 }
+
+
+
+
+
+function generateCoins() { // En esta clase se generan las monedas de forma aleatoria (COINS)
+    if(frames % 250 === 0){
+        const y = Math.floor(Math.random() * 380)
+        const eth = new Coins($canvas.width, y, 35, 35, this.image)
+        coins.push(eth)
+    }
+
+    coins.forEach((obj, index) => {
+        if(obj.x + obj.width < 0) coins.slice(1, index)
+    })
+}
+
+
+function drawCoins() {
+    coins.forEach((eth) => eth.draw());
+}
+
+
+/* function checkCoinsCollitions() {
+    coins.forEach(eth => {
+        if(actor.isTouching(eth)){
+            coins += 1;
+        }
+    });
+} */
+
+
 
 
 

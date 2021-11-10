@@ -1,21 +1,47 @@
-
 body{
     background-color: whitesmoke;
-    background-image: url(https://images.pexels.com/photos/3038740/pexels-photo-3038740.jpeg?cs=srgb&dl=pexels-vlado-paunovic-3038740.jpg&fm=jpg)
+    background-image: url(https://images.pexels.com/photos/1227511/pexels-photo-1227511.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940)
+  
 }
 
+
+
 h1{
- font-family: monospace;
+ font-family: Impact;
  font-size: 80px;
- color: rgba(245, 97, 29, 0.883);
+ color: rgb(231, 6, 6);
  display:flex;
  justify-content: center;
  align-items: center;
 }
 
+h1::before {  
+    transform: scaleX(0);
+    transform-origin: bottom right;
+}
+  
+h1:hover::before {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+  
+h1::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    inset: 0 0 0 0;
+    background: whitesmoke;
+    z-index: -1;
+    transition: transform .3s ease;
+}
+  
+h1 {
+    position: relative;
+    font-size: 5rem;
+}
 
-
-p{
+p {
     font-family: monospace;
     font-size: x-large;
     color: whitesmoke;
@@ -34,13 +60,10 @@ canvas {
   
 
 
-
-
-
 button{
     background-color: rgb(241, 64, 64);
-    color:whitesmoke;
-    border-radius: 10px;
+    color:rgb(255, 255, 255);
+    border-radius: 8px;
     position: absolute;
     top: 90%;
     left: 50%;
@@ -48,3 +71,44 @@ button{
 
 }
 
+
+.btn-5 {
+    width: 120px;
+    height: 60px;
+    line-height: 42px;
+    padding: 0;
+    border: none;
+    background: rgb(255,27,0);
+  background: linear-gradient(0deg, rgba(255,27,0,1) 0%, rgba(251,75,2,1) 100%);
+  }
+  .btn-5:hover {
+    color: #f0094a;
+    background: transparent;
+     box-shadow:none;
+  }
+  .btn-5:before,
+  .btn-5:after {
+    content:'';
+    position:absolute;
+    top:0;
+    right:0;
+    height:2px;
+    width:0;
+    background: #f0094a;
+    box-shadow:
+     -1px -1px 5px 0px #fff,
+     7px 7px 20px 0px #0003,
+     4px 4px 5px 0px #0002;
+    transition:400ms ease all;
+  }
+  .btn-5:after {
+    right:inherit;
+    top:inherit;
+    left:0;
+    bottom:0;
+  }
+  .btn-5:hover:before,
+  .btn-5:hover:after {
+    width:100%;
+    transition:800ms ease all;
+}
