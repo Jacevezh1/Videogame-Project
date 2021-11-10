@@ -71,24 +71,29 @@ class Impostor extends GameAsset {
         super(x, y, width, height, img);
     }
     draw(){
-        this.y+= 2
-         // Esto genera que el personaje caiga al suelo 
+        this.y+=1  // PENDIENTE VERIFICAR PARA VER SI EL JUGADOR CAE O NO (CAIGA AL SUELO)
+        this.x+= 0.1 // Avanze en direccion al final del canvas
+        if(this.x > $canvas.width - this.width) // Esto genera que el personaje no pase de los bordes del canvas en su ancho
+            this.x = $canvas.width - this.width;
+         
         if(this.y > $canvas.height - this.height) // Esto genera que el personaje no pase de los bordes del canvas en su altura 
             this.y = $canvas.height - this.height;
-        this.move = 24;
-        this.jump = 80;
-        this.fall = 35;
+        this.move = 30;
+        
+
+       /*  this.jump = 80;
+        this.fall = 35; */
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
     }
 
 
     // Aqui se agregan los metodos para mover al personaje 
     moveUp() {
-        this.y-= this.jump;
+        this.y-= this.move;
     }
 
     moveDown() {
-        this.y+= this.fall;
+        this.y+= this.move;
     }
 
     moveLeft(){
@@ -115,7 +120,7 @@ class Impostor extends GameAsset {
 
 
 
-class Obstacle {
+class Obstacle { // Clase que genera las balas (OBSTACULOS)
     constructor(x, y, width, height, img) {
         this.x = x;
         this.y = y;
@@ -145,7 +150,7 @@ const board = new BackgroundBoard(0, 0, $canvas.width, $canvas.height, boardImag
 
 
 // (SPRITES, esto se remueve para crear los sprites de mi mono)
-const actorImage = "/images/character.jpg";
+const actorImage = "/images/spaceship.png";
 const actor = new Impostor(120, 450, 55, 55, actorImage);
 
 
@@ -177,7 +182,7 @@ function update() {
     // 3. Dibujar los elementos
     board.draw() // Se dibuja el canvas
     actor.draw(); // Se dibuja al personaje principal
-    drawEnemies(); // Se dibujan los Obstaculos
+    drawEnemies(); // Se dibujan los Obstaculos //
     drawScore();
     drawLives();
     gameOver(); 
@@ -195,9 +200,11 @@ function drawScore() { // Funcion que me permite dibujar el score (SCORE)
 
 
 function drawLives(){ // Funcion que me permite dibujar (VIDAS)
+    if(isGameOver) {lives-=1} // Aqui se le resta la vida si pierdo 
     ctx.font = "20px Impact"
     ctx.fillStyle = "orange";
-    ctx.fillText('LIVES:  '+ lives, 20, 50)
+    ctx.fillText('Lives:  '+ lives, 20, 50)
+
 }
 
 
@@ -235,14 +242,29 @@ function checkCollitions() { // Funcion que checa si hubo colision de mi persona
 
 function generateObstacles() { // En esta funcion se generan los obstaculos de forma aletoria en el canvas y se empujan al array.
     if(frames % 150 === 0) {
-        const y = Math.floor(Math.random() * 380)
-        const enemie = new Obstacle($canvas.width, y, 45, 45, this.image); 
+        const y = Math.floor(Math.random() * 470)
+        const enemie = new Obstacle($canvas.width, y, 45, 45, this.image); // MODIFICAR CANVAS WIDTH
         enemies.push(enemie);
     }
 
     enemies.forEach((obs, index) => { // Eliminamos los enemies que estan fuera de pantalla, para no saturar memoria
         if (obs.x + obs.width < 0) enemies.splice(1, index)
     });
+
+
+    // PENDIENTE MODIFICAR PARA INCLUIR NUEVOS MONOS
+    /* if(frames === 2000){
+        const y = Math.floor(Math.random() * 470)
+        const enemie = new Obstacle($canvas.width, y, 80, 80, this.image); // MODIFICAR CANVAS WIDTH
+        enemies.push(enemie);
+    }
+
+    if(frames === 3000){
+        const y = Math.floor(Math.random() * 470)
+        const enemie = new Obstacle($canvas.width, y, 100, 100, this.image); // MODIFICAR CANVAS WIDTH
+        enemies.push(enemie);
+    } */
+
 }
 
 
@@ -277,12 +299,6 @@ function checkKeys() { // Funcion que permite ver que boton usa el usuario
                 actor.moveLeft();
     
                 break;
-            case "Enter":
-                start();
-    
-                break;
-            
-
             default:
                 break;
         }
@@ -293,43 +309,18 @@ function checkKeys() { // Funcion que permite ver que boton usa el usuario
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // 7. Interaccion de usuario
 
 document.onkeyup = event => {
     switch (event.key) {
-        case " ":
-            
-            break;
-        case "Enter":
+        case "Enter": // Para iniciar el juego
             start();
             break;
         default:
-            break;
+        break;
     }
 }
 
 
 
 
-/* $button.start(); */

@@ -6,13 +6,16 @@ body{
 
 h1{
  font-family: monospace;
- font-size: xxx-large;
+ font-size: 80px;
  color: rgba(245, 97, 29, 0.883);
+ display:flex;
+ justify-content: center;
+ align-items: center;
 }
 
 
 
-li{
+p{
     font-family: monospace;
     font-size: x-large;
     color: whitesmoke;
@@ -21,13 +24,27 @@ li{
 
 canvas {
     border: 20px solid whitesmoke;
-   
-    
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);               
+  
+                    
 }
   
+
+
+
+
 
 button{
     background-color: rgb(241, 64, 64);
     color:whitesmoke;
+    border-radius: 10px;
+    position: absolute;
+    top: 90%;
+    left: 50%;
+    transform: translate(-50%, -50%);  
+
 }
 
