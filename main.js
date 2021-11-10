@@ -1,27 +1,32 @@
-// 1.  Se traen elementos y contexto del DOM (CANVAS)
+//---------------------------- 1.  Se traen elementos y contexto del DOM (CANVAS)
 const $canvas = document.querySelector("canvas");
 const $button = document.querySelector("startGame");
 const ctx = $canvas.getContext("2d");
 
 
 
-// 2. Definir las variables Globales
+
+//---------------------------------- 2. Definir las variables Globales------------------------//
 
 let frames = 0;
 let intervalId;
 let enemies = [];
 const bullets = [];
 let isGameOver = false; 
-let coins = [];
+let casinoChips = [];
+let collectedChips = 0;
 let score = 0;
 let lives = 1;
 
 
 
 
-// 3. Crear clases y sus propiedades y metodos
+//--------------------------------- 3. Crear clases y sus propiedades y metodos--------------------//
 
-// Clase generica con lo minimo indispensable para que un elemento del juego sea representado y se logre pintar.
+
+
+
+//------------------------------------------3.1. Clase GENERICA -----------------------------------//
 class GameAsset {
 	constructor(x, y, width, height, img) {
 		this.x = x;
@@ -39,14 +44,16 @@ class GameAsset {
 
 
 
-// Dentro de esta extension de la clase padre, se pintara el Background infinito horizontal (BACKGROUND)
+// -------------------- 3.2  Clase BACKGROUND se pintara el Background infinito horizontal ---------//
 class BackgroundBoard extends GameAsset {
 	constructor(x, y, width, height, img) {
-		super(x, y, width, height, img);
+		super(x, y, width, height, img); 
 	}
     // En esta parte se realiza el poliformismo para contextualizar y modificar la clase padre //
     draw(){
-        this.x-=1.5;
+
+        this.x-=1.5; // Permite modificar la velocidad en la que se mueve el BACKGROUND
+       
         // Se realiza efecto infinito de la imagen (Cuando primer imagen del canvas, reseteamos a 0)
         if(this.x < -this.width) this.x = 0;
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
@@ -64,61 +71,67 @@ class BackgroundBoard extends GameAsset {
 
 
 
-// Dentro de esta se genera la clase del personaje (CHARACTER)
+// ------------------------3.3 Clase CHARACTER Dentro de esta se genera la clase del personaje ------ //
 class Impostor extends GameAsset {
     constructor(x, y, width, height, img){ // IMG se removera para hacer los sprites del MONO
         super(x, y, width, height, img);
     }
     draw(){
-        this.y+=1  // PENDIENTE VERIFICAR PARA VER SI EL JUGADOR CAE O NO (CAIGA AL SUELO)
-        this.x+= 0.1 // Avanze en direccion al final del canvas
+        this.y+=0.3  // PENDIENTE VERIFICAR PARA VER SI EL JUGADOR CAE O NO (CAIGA AL SUELO)
+        this.x+= 0.1 // Esto para que el mono avance de dereche a izquierda
         if(this.x > $canvas.width - this.width) // Esto genera que el personaje no pase de los bordes del canvas en su ancho
             this.x = $canvas.width - this.width;
          
         if(this.y > $canvas.height - this.height) // Esto genera que el personaje no pase de los bordes del canvas en su altura 
             this.y = $canvas.height - this.height;
-        this.move = 30;
-        
+        this.moveBack = 20; // Para que mi personaje se mueva hacia atras
+        this.moveFoward = 10; // Para que el personaje se mueve hacia adelante
+        this.jump = 40; // Para que el personaje pueda brincar mas
+        this.down = 40; // Para que el personaje se recorra hacia abajo
 
-       /*  this.jump = 80;
-        this.fall = 35; */
+
+       
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
     }
 
 
-    // Aqui se agregan los metodos para mover al personaje 
+    // METODOS para MOVER al CHARACTER 
     moveUp() {
-        this.y-= this.move;
+        this.y-= this.jump;
     }
 
     moveDown() {
-        this.y+= this.move;
+        this.y+= this.down;
     }
 
     moveLeft(){
-        this.x-= this.move;
+        this.x-= this.moveBack;
     }
 
     moveRight(){
-        this.x+= this.move;
+        this.x+= this.moveFoward;
     }
 
 
-    // Metodo para saber si se estan tocando mis obstaculos y mi personaje
-    isTouching(obj) {
-		return (
-			this.x < obj.x + obj.width &&
-			this.x + this.width > obj.x &&
-			this.y < obj.y + obj.height &&
-			this.y + this.height > obj.y
+    // METODO para saber si se estan COLISIONANDO mis OBSTACULOS y mi CHARACTER
+    isTouching(obj) { 
+		return (  // Si se incrementa '+' aumenta el margen del choque
+			this.x < obj.x + 37 && // Limita impacto en parte trasera (37 = obj.width)
+			this.x + 50 > obj.x && // Limita impacto en parte frontal (50 = this.width)
+			this.y < obj.y + 23 && // Limita impacto de abajo hacia arriba  (23 = obj.heigth)
+			this.y + 32.5 > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
 		);
 	}
+
+
+
+  
 }
 
 
 
-
-class Obstacle { // Clase que genera las balas (OBSTACULOS)
+// ------------------------3.4 Clase OBSTACLE genera MISILES (ENEMIES )------ //
+class Obstacle { 
     constructor(x, y, width, height, img) {
         this.x = x;
         this.y = y;
@@ -126,25 +139,26 @@ class Obstacle { // Clase que genera las balas (OBSTACULOS)
         this.height = height;
         this.image = new Image();
         this.image.src = "/images/bullet.png";
+        this.live =0; // PENDIENTE MODIFICAR
     }
     
     draw() {
-        this.x--;
+        this.x-=2.5;
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     } 
 }
 
 
 
-
-class Coins { // Clase que genera las monedas para ganar (COINS)
+// ------------------------3.3 Clase CHIPS genera PUNTOS (MONEDAS-CASINO) ------ //
+class Chips { // Clase que genera las monedas para ganar (COINS)
     constructor(x, y, width, height, img) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.image = new Image();
-        this.image.src = "/images/eth.png";
+        this.image.src = "/images/casino.png";
     }
     
     draw() {
@@ -152,17 +166,37 @@ class Coins { // Clase que genera las monedas para ganar (COINS)
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     } 
 
-    // Metodo para saber si mi pesonaje esta tomando las monedas
-    /* isTouching(obj) {
-		return (
-			this.x < obj.x + obj.width &&
-			this.x + this.width > obj.x &&
-			this.y < obj.y + obj.height &&
-			this.y + this.height > obj.y
+    isTouchingChip(obj) { 
+		return (  // Si se incrementa '+' aumenta el margen del choque
+			this.x < obj.x + 37 && // Limita impacto en parte trasera (37 = obj.width)
+			this.x + 50 > obj.x && // Limita impacto en parte frontal (50 = this.width)
+			this.y < obj.y + 23 && // Limita impacto de abajo hacia arriba  (23 = obj.heigth)
+			this.y + 32.5 > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
 		);
-	} */
+	}
+  
 }
 
+
+
+class Bullet { // Clase que me permite generar balas
+    constructor(x, y){
+        this.x = x;
+        this. y = y;
+        this.width = 10;
+        this.height = 10;
+        this.color = "red";
+        /* this.image = new Image()
+        this.image.src = " " */
+    };
+
+    draw(){
+        this.x++;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height)
+    }
+
+}
 
 
 
@@ -171,7 +205,7 @@ class Coins { // Clase que genera las monedas para ganar (COINS)
 const boardImage = "https://64.media.tumblr.com/37ae369d5ee8576431758ad00e4f2f93/tumblr_obik5y31uA1qe6rsgo1_1280.gifv";
 const board = new BackgroundBoard(0, 0, $canvas.width, $canvas.height, boardImage);
 
-// https://64.media.tumblr.com/37ae369d5ee8576431758ad00e4f2f93/tumblr_obik5y31uA1qe6rsgo1_1280.gifv
+
 
 
 
@@ -196,12 +230,12 @@ function start() {
 function update() {
     // 1. Calcular y recalcular el estado de nuestro programa
     frames++; // Se actualiza el programa
-    checkKeys();
+    checkKeys(); // Que tecla se presiona
     generateObstacles(); // Se generan los obstaculos
-    generateCoins(); // PENDIENTE PENDIENTE
+    generateChips(); // Genera las chips
     checkCollitions();  // Se checa si hubo colisiones
-    /* checkCoinsCollitions(); */ // Se checa si hubo colisiones entre mi moneda y mi personaje (SI = SUMA COIN)
-    
+    checkChipsCollitions(); // Se checa si hubo colisiones entre mi moneda y mi personaje (SI = SUMA COIN)
+    generateBullets(); // NUEVO PENDIENTE
  
 
     // 2. Limpiar el canvas
@@ -211,12 +245,12 @@ function update() {
     board.draw() // Se dibuja el canvas
     actor.draw(); // Se dibuja al personaje principal
     drawEnemies(); // Se dibujan los Obstaculos //
-    drawCoins(); 
+    drawChips(); 
     drawScore();
     drawLives();
-    drawCollectedCoins();
+    drawCollectedChips();
+    drawBullets(); // PENDIENTE Y NUEVO
     gameOver(); 
-
 }
 
 
@@ -238,10 +272,10 @@ function drawLives(){ // Funcion que me permite dibujar (VIDAS)
 }
 
 
-function drawCollectedCoins() { // Funcion que me permite dibujar cuantas monedas he tomado
+function drawCollectedChips() { // Funcion que me permite dibujar cuantas monedas he tomado
     ctx.font = "20px Impact"
     ctx.fillStyle = "orange";
-    ctx.fillText(`Coins: ${coins}`, 680, 30)
+    ctx.fillText(`Chips: ${collectedChips}`, 680, 30)
 }
 
 
@@ -258,13 +292,11 @@ function gameOver() { // Funcion que dice Game Over cuando hay una colision (GAM
 
 
 
-
-
 // 6. Funciones de apoyo
 
 
  
-function checkCollitions() { // Funcion que checa si hubo colision de mi personaje y obstaculos (CHECKCOLITIONS)
+function checkCollitions() { // Funcion que checa si hubo colision de mi personaje y los misiles (CHECKCOLITIONS)
     enemies.forEach(enemie => {
         if(actor.isTouching(enemie)){
            clearInterval(intervalId);
@@ -274,10 +306,8 @@ function checkCollitions() { // Funcion que checa si hubo colision de mi persona
     });
 }
 
-
-
 function generateObstacles() { // En esta funcion se generan los obstaculos de forma aletoria en el canvas y se empujan al array.
-    if(frames % 150 === 0) {
+    if(frames % 100 === 0) {
         const y = Math.floor(Math.random() * 470)
         const enemie = new Obstacle($canvas.width, y, 45, 45, this.image); // MODIFICAR CANVAS WIDTH
         enemies.push(enemie);
@@ -297,32 +327,53 @@ function drawEnemies() { // En esta funcion se itera cada elemento de enemies y 
 
 
 
-
-function generateCoins() { // En esta clase se generan las monedas de forma aleatoria (COINS)
-    if(frames % 250 === 0){
+function generateChips() { // En esta clase se generan las monedas de forma aleatoria (COINS)
+    if(frames % 200 === 0){
         const y = Math.floor(Math.random() * 380)
-        const eth = new Coins($canvas.width, y, 35, 35, this.image)
-        coins.push(eth)
+        const chip = new Chips($canvas.width, y, 35, 35, this.image)
+        casinoChips.push(chip)
     }
+}
 
-    coins.forEach((obj, index) => {
-        if(obj.x + obj.width < 0) coins.slice(1, index)
+
+function drawChips() {
+    casinoChips.forEach((chip) => chip.draw());
+}
+
+
+function checkChipsCollitions() {
+    casinoChips.forEach(chip => {
+        if (chip.isTouchingChip(actor)) {
+            collectedChips++;
+            casinoChips.splice(chip, 1)
+            console.log(collectedChips);
+       } 
     })
 }
 
 
-function drawCoins() {
-    coins.forEach((eth) => eth.draw());
+
+
+function generateBullets() {
+    
+    if(frames % 60 === 0){
+        const bullet = new Bullet(actor.x + 25, actor.y);
+        bullets.push(bullet) 
+    }
+   
+    bullets.forEach((obj, index) => {
+        if(obj.x - obj.width > 0) bullets.splice(1, index)
+    })
 }
 
 
-/* function checkCoinsCollitions() {
-    coins.forEach(eth => {
-        if(actor.isTouching(eth)){
-            coins += 1;
-        }
-    });
-} */
+function drawBullets() {
+    bullets.forEach((bullet) => bullet.draw());
+}
+
+
+
+
 
 
 
@@ -351,7 +402,8 @@ function checkKeys() { // Funcion que permite ver que boton usa el usuario
                 break;
             case "ArrowLeft":
                 actor.moveLeft();
-    
+            case "w":
+                drawBullets();
                 break;
             default:
                 break;
