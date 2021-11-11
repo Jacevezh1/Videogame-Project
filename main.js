@@ -1,4 +1,4 @@
-//---------------------------- 1.  Se traen elementos y contexto del DOM (CANVAS)
+//-----------------------> 1.  Se traen elementos y contexto del DOM (CANVAS) <-------
 const $canvas = document.querySelector("canvas");
 const $button = document.querySelector("startGame");
 const ctx = $canvas.getContext("2d");
@@ -6,27 +6,31 @@ const ctx = $canvas.getContext("2d");
 
 
 
-//---------------------------------- 2. Definir las variables Globales------------------------//
+//-----------------------------> 2. Definir las variables Globales <------------------------
 
 let frames = 0;
 let intervalId;
+
 let enemies = [];
+let skyBombs = [];
+
 const bullets = [];
+
 let isGameOver = false; 
+
 let casinoChips = [];
 let collectedChips = 0;
+
 let score = 0;
 let lives = 1;
 
 
 
 
-//--------------------------------- 3. Crear clases y sus propiedades y metodos--------------------//
+//---------------------------> 3. Crear CLASES y sus PROPIEDADES y METODOS <--------------------
 
 
-
-
-//------------------------------------------3.1. Clase GENERICA -----------------------------------//
+//---------------------------------------3.1. Clase GENERICA <-----------------------------------
 class GameAsset {
 	constructor(x, y, width, height, img) {
 		this.x = x;
@@ -44,11 +48,12 @@ class GameAsset {
 
 
 
-// -------------------- 3.2  Clase BACKGROUND se pintara el Background infinito horizontal ---------//
+// -----------------------------------> 3.2  Clase BACKGROUND  <------------------
 class BackgroundBoard extends GameAsset {
 	constructor(x, y, width, height, img) {
 		super(x, y, width, height, img); 
 	}
+
     // En esta parte se realiza el poliformismo para contextualizar y modificar la clase padre //
     draw(){
 
@@ -71,13 +76,13 @@ class BackgroundBoard extends GameAsset {
 
 
 
-// ------------------------3.3 Clase CHARACTER Dentro de esta se genera la clase del personaje ------ //
+// ---------------------------------------> 3.3 Clase CHARACTER  <-----------------------------------
 class Impostor extends GameAsset {
     constructor(x, y, width, height, img){ // IMG se removera para hacer los sprites del MONO
         super(x, y, width, height, img);
     }
     draw(){
-        this.y+=0.3  // PENDIENTE VERIFICAR PARA VER SI EL JUGADOR CAE O NO (CAIGA AL SUELO)
+        this.y+=0.3 // Character CAIGA al SUELO
         this.x+= 0.1 // Esto para que el mono avance de dereche a izquierda
         if(this.x > $canvas.width - this.width) // Esto genera que el personaje no pase de los bordes del canvas en su ancho
             this.x = $canvas.width - this.width;
@@ -122,15 +127,12 @@ class Impostor extends GameAsset {
 			this.y + 32.5 > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
 		);
 	}
-
-
-
   
 }
 
 
 
-// ------------------------3.4 Clase OBSTACLE genera MISILES (ENEMIES )------ //
+// ------------------------> 3.4 Clase OBSTACLE genera MISILES (ENEMIES) <----------------------------
 class Obstacle { 
     constructor(x, y, width, height, img) {
         this.x = x;
@@ -150,8 +152,27 @@ class Obstacle {
 
 
 
-// ------------------------3.3 Clase CHIPS genera PUNTOS (MONEDAS-CASINO) ------ //
-class Chips { // Clase que genera las monedas para ganar (COINS)
+// ----------------------> 3.5 Clase SKYFALL OBSTACULOS CAEN DEL CIELO (MINIBOMBAS) <---------------
+
+class SkyFallObstacle extends Obstacle {
+    constructor(x, y, width, height, img) {
+        super(x, y, width, height, img)
+        this.image = new Image();
+        this.image.src = "/images/skyfallBOMB.png";
+    }
+
+    draw() {
+        this.y++;
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+    }
+
+}
+
+
+
+
+// ------------------------> 3.6 Clase CHIPS genera PUNTOS (MONEDAS-CASINO) <------------------
+class Chips { 
     constructor(x, y, width, height, img) {
         this.x = x;
         this.y = y;
@@ -179,7 +200,10 @@ class Chips { // Clase que genera las monedas para ganar (COINS)
 
 
 
-class Bullet { // Clase que me permite generar balas
+
+
+// ------------------------> 3.7 Clase BULLET genera BALAS (BALAS-PERSONAJE) <--------------------
+class Bullet { 
     constructor(x, y){
         this.x = x;
         this. y = y;
@@ -200,13 +224,10 @@ class Bullet { // Clase que me permite generar balas
 
 
 
-// 4. Instancias de las clases
+// --------------------------------> 4. Instancias de las clases <-------------------------------
 
 const boardImage = "https://64.media.tumblr.com/37ae369d5ee8576431758ad00e4f2f93/tumblr_obik5y31uA1qe6rsgo1_1280.gifv";
 const board = new BackgroundBoard(0, 0, $canvas.width, $canvas.height, boardImage);
-
-
-
 
 
 // (SPRITES, esto se remueve para crear los sprites de mi mono)
@@ -217,8 +238,14 @@ const actor = new Impostor(120, 450, 55, 55, actorImage);
 
 
 
-// 5. Funciones principales 
 
+
+// --------------------------------> 5. Funciones PRINCIPALES <------------------------------------
+
+
+
+
+// ------------------------------------> 5.1 Funcion START <---------------------------
 function start() {
     if(intervalId) return; // Esto se hace para que no se encimen los intervalos y no modificar su velocidad
     intervalId = setInterval(() => {
@@ -227,11 +254,13 @@ function start() {
 }
 
 
+// ------------------------------------> 5.2 Funcion UPDATE <---------------------------------
 function update() {
     // 1. Calcular y recalcular el estado de nuestro programa
     frames++; // Se actualiza el programa
     checkKeys(); // Que tecla se presiona
     generateObstacles(); // Se generan los obstaculos
+    generateSkyFallBombs() // Se generan los skyfalls
     generateChips(); // Genera las chips
     checkCollitions();  // Se checa si hubo colisiones
     checkChipsCollitions(); // Se checa si hubo colisiones entre mi moneda y mi personaje (SI = SUMA COIN)
@@ -244,7 +273,8 @@ function update() {
     // 3. Dibujar los elementos
     board.draw() // Se dibuja el canvas
     actor.draw(); // Se dibuja al personaje principal
-    drawEnemies(); // Se dibujan los Obstaculos //
+    drawEnemies(); // Se dibujan los Obstaculos 
+    drawSkyBoms(); // Se generan los SkyBoms
     drawChips(); 
     drawScore();
     drawLives();
@@ -254,7 +284,10 @@ function update() {
 }
 
 
-function drawScore() { // Funcion que me permite dibujar el score (SCORE)
+
+
+// ------------------------------> 5.3 Funcion DRAWSCORE <-----------------------------
+function drawScore() { 
     score = Math.floor(frames / 5)
     ctx.font = "20px Impact"
     ctx.fillStyle = "orange";
@@ -263,7 +296,9 @@ function drawScore() { // Funcion que me permite dibujar el score (SCORE)
 
 
 
-function drawLives(){ // Funcion que me permite dibujar (VIDAS)
+
+// ------------------------------> 5.4 Funcion DRAWLIVES <-----------------------------
+function drawLives(){ 
     if(isGameOver) {lives-=1} // Aqui se le resta la vida si pierdo 
     ctx.font = "20px Impact"
     ctx.fillStyle = "orange";
@@ -272,7 +307,9 @@ function drawLives(){ // Funcion que me permite dibujar (VIDAS)
 }
 
 
-function drawCollectedChips() { // Funcion que me permite dibujar cuantas monedas he tomado
+
+// ------------------------------> 5.5 Funcion DRAWCOLLECTEDCHIPS <-----------------------------
+function drawCollectedChips() { 
     ctx.font = "20px Impact"
     ctx.fillStyle = "orange";
     ctx.fillText(`Chips: ${collectedChips}`, 680, 30)
@@ -280,7 +317,8 @@ function drawCollectedChips() { // Funcion que me permite dibujar cuantas moneda
 
 
 
-function gameOver() { // Funcion que dice Game Over cuando hay una colision (GAMEOVER)
+// ------------------------------> 5.3 Funcion GAMEOVER <---------------------------------------
+function gameOver() { 
     if(isGameOver){
         ctx.font = "100px Impact";
         ctx.fillStyle = "red"
@@ -292,11 +330,16 @@ function gameOver() { // Funcion que dice Game Over cuando hay una colision (GAM
 
 
 
-// 6. Funciones de apoyo
 
 
- 
-function checkCollitions() { // Funcion que checa si hubo colision de mi personaje y los misiles (CHECKCOLITIONS)
+
+
+// -------------------------------> 6. Funciones de APOYO <----------------------------------
+
+
+
+// --------------------------> 6.1 Funcion CHECKCOLLITIONS (MISILES) <-------------------
+function checkCollitions() { 
     enemies.forEach(enemie => {
         if(actor.isTouching(enemie)){
            clearInterval(intervalId);
@@ -306,10 +349,11 @@ function checkCollitions() { // Funcion que checa si hubo colision de mi persona
     });
 }
 
-function generateObstacles() { // En esta funcion se generan los obstaculos de forma aletoria en el canvas y se empujan al array.
+// --------------------------> 6.2 Funcion GENERATEOBSTACLES (MISILES) <-------------------
+function generateObstacles() { 
     if(frames % 100 === 0) {
         const y = Math.floor(Math.random() * 470)
-        const enemie = new Obstacle($canvas.width, y, 45, 45, this.image); // MODIFICAR CANVAS WIDTH
+        const enemie = new Obstacle($canvas.width, y, 45, 45, this.image); 
         enemies.push(enemie);
     }
 
@@ -319,15 +363,53 @@ function generateObstacles() { // En esta funcion se generan los obstaculos de f
 
 }
 
-
-function drawEnemies() { // En esta funcion se itera cada elemento de enemies y lo imprime
+// --------------------------> 6.3 Funcion DRAWENEMIES (MISILES) <-----------------------------
+function drawEnemies() { 
     enemies.forEach((enemie) => enemie.draw())
 }
 
 
 
 
-function generateChips() { // En esta clase se generan las monedas de forma aleatoria (COINS)
+
+
+//-----------------------------> 6.4 Funcion GENERATE (SKY FALL BOMBS) <------------------
+function generateSkyFallBombs() { 
+    if (frames % 200 === 0) {
+        const x = Math.floor(Math.random() * $canvas.height)
+        const skyBomb = new SkyFallObstacle(x, 0, 40, 40, this.image)
+        skyBombs.push(skyBomb);
+    }
+
+    skyBombs.forEach((obs, index) => {
+        if(obs.y + obs.height < 0) skyBombs.splice(1, index)
+    })
+}
+
+
+//-----------------------------------> 6.5 Funcion DRAWSKYBOMBS <-----------------------------
+function drawSkyBoms(){
+    skyBombs.forEach((skyBomb) => skyBomb.draw())
+}
+
+
+
+//---------------------------------> 6.6 Funcion SKYCHECKCOLLITIONS <-------------------------
+
+
+function skyCheckCollitions() {
+    
+}
+
+
+
+
+
+
+
+
+// ------------------------> 6.7  Funcion GENERATE CHIPS (PUNTOS) <-------------------
+function generateChips() { 
     if(frames % 200 === 0){
         const y = Math.floor(Math.random() * 380)
         const chip = new Chips($canvas.width, y, 35, 35, this.image)
@@ -336,16 +418,22 @@ function generateChips() { // En esta clase se generan las monedas de forma alea
 }
 
 
-function drawChips() {
+
+
+// --------------------------> 6.8 Funcion DRAWCHIPS (PUNTOS) <-------------------
+function drawChips() { 
     casinoChips.forEach((chip) => chip.draw());
 }
 
 
-function checkChipsCollitions() {
+
+
+// -----------------------> 6.9 Funcion CHECK CHIPS COLLITTIONS (PUNTOS) <---------------
+function checkChipsCollitions() { 
     casinoChips.forEach(chip => {
         if (chip.isTouchingChip(actor)) {
-            collectedChips++;
-            casinoChips.splice(chip, 1)
+            collectedChips++; 
+            casinoChips.splice(chip, 1) // Se borran del CANVAS cuando hay contacto
             console.log(collectedChips);
        } 
     })
@@ -353,8 +441,8 @@ function checkChipsCollitions() {
 
 
 
-
-function generateBullets() {
+// --------------------------> 6.10 Funcion GENERA BALAS (BULLETS) <-------------------
+function generateBullets() { 
     
     if(frames % 60 === 0){
         const bullet = new Bullet(actor.x + 25, actor.y);
@@ -367,7 +455,9 @@ function generateBullets() {
 }
 
 
-function drawBullets() {
+
+// --------------------------> 6.11 Funcion DRAWBULLETS (BULLETS) <-------------------
+function drawBullets() { 
     bullets.forEach((bullet) => bullet.draw());
 }
 
@@ -375,17 +465,16 @@ function drawBullets() {
 
 
 
-
-
-
-
-function clearCanvas() { // En esta funcion se limpia el canvas
+// --------------------------> 6.12 Funcion CLEARCANVAS (CANVAS) <-------------------
+function clearCanvas() { // FUNCION se limpia el CANVAS
     ctx.clearRect(0, 0, $canvas.width, $canvas.height); 
 }
 
 
 
-function checkKeys() { // Funcion que permite ver que boton usa el usuario
+
+// -----------------------> 6.13 Funcion CHECKKEYS (TECLADO Y EVENTOS) <-------------------
+function checkKeys() { 
     document.onkeydown = event => {
         switch (event.key) {
             case "ArrowUp":
@@ -415,7 +504,8 @@ function checkKeys() { // Funcion que permite ver que boton usa el usuario
 
 
 
-// 7. Interaccion de usuario
+// -------------------------> 7. Interaccion de usuario para inicar el juego <-------
+
 
 document.onkeyup = event => {
     switch (event.key) {
