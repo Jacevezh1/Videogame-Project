@@ -141,13 +141,27 @@ class Obstacle {
         this.height = height;
         this.image = new Image();
         this.image.src = "/images/bullet.png";
-        this.live =0; // PENDIENTE MODIFICAR
+        this.live =1; 
     }
     
     draw() {
-        this.x-=2.5;
+        this.x-=3;
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-    } 
+    };
+
+    isTouchingEnemie(obj) {
+        return (
+        this.x < obj.x + obj.width &&
+        this.x + this.width > obj.x &&
+        this.y < obj.y + obj.height &&
+        this.y + this.height > obj.y
+    )}
+
+    deadEnemy(){
+        if(bullets.isTouching(enemies)){
+            this.live-=1;
+        } 
+    };
 }
 
 
@@ -208,14 +222,15 @@ class Bullet {
         this.x = x;
         this. y = y;
         this.width = 10;
-        this.height = 10;
-        this.color = "red";
+        this.height = 5;
+        this.color = "orange";
+        this.velocity = 1;
         /* this.image = new Image()
         this.image.src = " " */
     };
 
     draw(){
-        this.x++;
+        this.x+=3;
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height)
     }
@@ -263,8 +278,9 @@ function update() {
     generateSkyFallBombs() // Se generan los skyfalls
     generateChips(); // Genera las chips
     checkCollitions();  // Se checa si hubo colisiones
+    skyCheckCollitions(); // Checa si hubo colisiones
     checkChipsCollitions(); // Se checa si hubo colisiones entre mi moneda y mi personaje (SI = SUMA COIN)
-    generateBullets(); // NUEVO PENDIENTE
+    /* generateBullets(); */ // NUEVO PENDIENTE
  
 
     // 2. Limpiar el canvas
@@ -398,7 +414,12 @@ function drawSkyBoms(){
 
 
 function skyCheckCollitions() {
-    
+    skyBombs.forEach(skyBomb => {
+        if(actor.isTouching(skyBomb)){
+            clearInterval(intervalId);
+           isGameOver = true;
+        }
+    });
 }
 
 
@@ -428,6 +449,7 @@ function drawChips() {
 
 
 
+
 // -----------------------> 6.9 Funcion CHECK CHIPS COLLITTIONS (PUNTOS) <---------------
 function checkChipsCollitions() { 
     casinoChips.forEach(chip => {
@@ -441,8 +463,10 @@ function checkChipsCollitions() {
 
 
 
+
+
 // --------------------------> 6.10 Funcion GENERA BALAS (BULLETS) <-------------------
-function generateBullets() { 
+/* function generateBullets() { 
     
     if(frames % 60 === 0){
         const bullet = new Bullet(actor.x + 25, actor.y);
@@ -452,7 +476,7 @@ function generateBullets() {
     bullets.forEach((obj, index) => {
         if(obj.x - obj.width > 0) bullets.splice(1, index)
     })
-}
+} */
 
 
 
@@ -465,10 +489,24 @@ function drawBullets() {
 
 
 
+
+
+
+
+
+
+
+
+
 // --------------------------> 6.12 Funcion CLEARCANVAS (CANVAS) <-------------------
 function clearCanvas() { // FUNCION se limpia el CANVAS
     ctx.clearRect(0, 0, $canvas.width, $canvas.height); 
 }
+
+
+
+
+
 
 
 
@@ -491,20 +529,32 @@ function checkKeys() {
                 break;
             case "ArrowLeft":
                 actor.moveLeft();
+                break;
             case "w":
-                drawBullets();
+                if(frames % 8 === 0){
+                    const bullet = new Bullet(actor.x, actor.y + 22.5)
+                    bullets.push(bullet); 
+                }
                 break;
             default:
-                break;
+            break;
         }
     }
+
+   
     
 }
 
 
 
 
+
+
+
+
 // -------------------------> 7. Interaccion de usuario para inicar el juego <-------
+
+
 
 
 document.onkeyup = event => {
