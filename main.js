@@ -201,6 +201,8 @@ class Chips {
         this.height = height;
         this.image = new Image();
         this.image.src = "/images/chip3.png";
+        this.audio = new Audio(); 
+        this.audio.src = "https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-41945/zapsplat_multimedia_game_tone_positive_reward_synth_delayed_46038.mp3"
     }
     
     draw() {
@@ -216,6 +218,11 @@ class Chips {
 			this.y + 32.5 > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
 		);
 	}
+
+    rewardChipSound(){ 
+        this.audio.volume = 0.15
+        this.audio.play();
+    }
   
 }
 
@@ -245,7 +252,7 @@ class Bullet {
     }
 
     shotSound(){
-        this.audio.volume = 0.3;
+        this.audio.volume = 0.25;
         this.audio.play();
     }
 
@@ -258,7 +265,6 @@ class Bullet {
 		);
 	}
 
- 
 }
 
 
@@ -495,6 +501,7 @@ function checkChipsCollitions() {
         if (chip.isTouchingChip(actor)) {
             collectedChips++; 
             casinoChips.splice(chip, 1) // Se borran del CANVAS cuando hay contacto
+            chip.rewardChipSound(); // Suena con colision con moneda
             console.log(collectedChips);
        } 
     })
