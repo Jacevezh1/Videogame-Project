@@ -56,8 +56,8 @@ class BackgroundBoard extends GameAsset {
 	constructor(x, y, width, height, img) {
 		super(x, y, width, height, img); 
 
-        this.audio = new Audio();
-        this.audio.src = "https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-one/transportation_aircraft_military_spitfire_flying_overhead.mp3"
+       /*  this.audio = new Audio();
+        this.audio.src = "https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-one/transportation_aircraft_military_spitfire_flying_overhead.mp3" */
 	}
 
     // En esta parte se realiza el poliformismo para contextualizar y modificar la clase padre //
@@ -77,10 +77,10 @@ class BackgroundBoard extends GameAsset {
         );
     }
 
-    backgroundAudio(){
+   /*  backgroundAudio(){
         this.audio.volume = 0.2;
         this.audio.play();
-    }
+    } */
 }
 
 
@@ -179,7 +179,7 @@ class SkyFallObstacle extends Obstacle {
     constructor(x, y, width, height, img) {
         super(x, y, width, height, img)
         this.image = new Image();
-        this.image.src = "/images/skyfallBOMB.png";
+        this.image.src = "/images/fallingBomb1.png";
     }
 
     draw() {
@@ -200,7 +200,7 @@ class Chips {
         this.width = width;
         this.height = height;
         this.image = new Image();
-        this.image.src = "/images/casino.png";
+        this.image.src = "/images/chip3.png";
     }
     
     draw() {
@@ -232,8 +232,9 @@ class Bullet {
         this.height = 5;
         this.color = "orange";
         this.audio = new Audio();
-        this.audio.src = "https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-69838/zapsplat_warfare_gun_rifles_single_shot_designed_71743.mp3"
+        this.audio.src = " https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-31172/zapsplat_science_fiction_weapon_gun_shoot_003_32196.mp3"
         this.velocity = 1;
+        // Optional sound :https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-69838/zapsplat_warfare_gun_rifles_single_shot_designed_71743.mp3
         
     };
 
@@ -244,7 +245,7 @@ class Bullet {
     }
 
     shotSound(){
-        this.audio.volume = 0.25;
+        this.audio.volume = 0.3;
         this.audio.play();
     }
 
@@ -288,7 +289,7 @@ function start() {
     if(intervalId) return; // Esto se hace para que no se encimen los intervalos y no modificar su velocidad
     intervalId = setInterval(() => {
         update();
-        board.backgroundAudio();
+        /* board.backgroundAudio(); */
     }, 1000/60)
 }
 
@@ -324,6 +325,7 @@ function update() {
     drawCollectedChips();
     drawBullets(); 
     gameOver(); 
+    winGame();
 }
 
 
@@ -370,9 +372,17 @@ function gameOver() {
 }
 
 
+// -----------------------------> 5.4 Funcion WinGame <-------------------------------------------
 
 
-
+function winGame() {
+    if(score >= 450){
+        ctx.font = "100px Impact";
+        ctx.fillStyle = "red"
+        ctx.fillText("YOU WON!", 200, 200, 400,);
+        clearInterval(intervalId);
+    }
+}
 
 
 
@@ -422,7 +432,7 @@ function drawEnemies() {
 function generateSkyFallBombs() { 
     if (frames % 100 === 0) {
         const x = Math.floor(Math.random() * $canvas.height)
-        const skyBomb = new SkyFallObstacle(x, 0, 40, 40, this.image)
+        const skyBomb = new SkyFallObstacle(x, 0, 60, 50, this.image)
         skyBombs.push(skyBomb);
     }
 
@@ -561,7 +571,7 @@ function checkKeys() {
                 actor.moveLeft();
                 break;
             case "w":
-                if(frames % 1 === 0){
+                if(frames % 6 === 0){
                     const bullet = new Bullet(actor.x, actor.y + 22.5)
                     bullets.push(bullet); 
                     bullet.shotSound();
