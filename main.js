@@ -12,7 +12,8 @@ let frames = 0;
 let intervalId;
 
 let enemies = [];
-let killedEnemies = [];
+let deadEnemies = [];
+
 
 
 let skyBombs = [];
@@ -77,10 +78,6 @@ class BackgroundBoard extends GameAsset {
         );
     }
 
-   /*  backgroundAudio(){
-        this.audio.volume = 0.2;
-        this.audio.play();
-    } */
 }
 
 
@@ -160,15 +157,17 @@ class Obstacle {
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     };
 
-    isTouchingEnemie(obj) {
-        return (
-        this.x < obj.x + obj.width &&
-        this.x + this.width > obj.x &&
-        this.y < obj.y + obj.height &&
-        this.y + this.height > obj.y
-    )}
 
-      
+    isTouchingObstacle(obj) { 
+		return (  // Si se incrementa '+' aumenta el margen del choque
+			this.x < obj.x + 37 && // Limita impacto en parte trasera (37 = obj.width)
+			this.x + 50 > obj.x && // Limita impacto en parte frontal (50 = this.width)
+			this.y < obj.y + 23 && // Limita impacto de abajo hacia arriba  (23 = obj.heigth)
+			this.y + 32.5 > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
+		);
+	}
+
+        
 }
 
 
@@ -186,6 +185,15 @@ class SkyFallObstacle extends Obstacle {
         this.y+=1.8;
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
+
+    isTouchingBomb(obj) { 
+		return (  // Si se incrementa '+' aumenta el margen del choque
+			this.x < obj.x + obj.width && // Limita impacto en parte trasera (37 = obj.width)
+			this.x + this.width > obj.x && // Limita impacto en parte frontal (50 = this.width)
+			this.y < obj.y + obj.height && // Limita impacto de abajo hacia arriba  (23 = obj.heigth)
+			this.y + this.height > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
+		);
+	}
 
 }
 
@@ -232,12 +240,14 @@ class Chips {
 
 // ------------------------> 3.7 Clase BULLET genera BALAS (BALAS-PERSONAJE) <--------------------
 class Bullet { 
-    constructor(x, y){
+    constructor(x, y, width, height, img){
         this.x = x;
         this. y = y;
-        this.width = 10;
-        this.height = 5;
-        this.color = "orange";
+        this.width = 20;
+        this.height = 15;
+        this.image = new Image()
+        this.image.src = "/images/laserShoot.png"
+        /* this.color = "orange"; */
         this.audio = new Audio();
         this.audio.src = " https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-31172/zapsplat_science_fiction_weapon_gun_shoot_003_32196.mp3"
         this.velocity = 1;
@@ -247,8 +257,9 @@ class Bullet {
 
     draw(){
         this.x+=6;
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.width, this.height)
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
+        /* ctx.fillStyle = this.color; */
+        /* ctx.fillRect(this.x, this.y, this.width, this.height) */
     }
 
     shotSound(){
@@ -258,13 +269,12 @@ class Bullet {
 
     isTouchingBullet(obj) { 
 		return (  // Si se incrementa '+' aumenta el margen del choque
-			this.x < obj.x + 37 && // Limita impacto en parte trasera (37 = obj.width)
-			this.x + 50 > obj.x && // Limita impacto en parte frontal (50 = this.width)
-			this.y < obj.y + 23 && // Limita impacto de abajo hacia arriba  (23 = obj.heigth)
-			this.y + 32.5 > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
+			this.x < obj.x + obj.width && // Limita impacto en parte trasera (37 = obj.width)
+			this.x + this.width > obj.x && // Limita impacto en parte frontal (50 = this.width)
+			this.y < obj.y + obj.height && // Limita impacto de abajo hacia arriba  (23 = obj.heigth)
+			this.y + this.height > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
 		);
 	}
-
 }
 
 
@@ -308,10 +318,11 @@ function update() {
     generateObstacles(); // Se generan los obstaculos
     generateSkyFallBombs() // Se generan los skyfalls
     generateChips(); // Genera las chips
-    checkCollitions();  // Se checa si hubo colisiones
+    checkCollitions(); // Se checa si hubo colisiones 
     skyCheckCollitions(); // Checa si hubo colisiones
     checkChipsCollitions();
-   /*  checkBulletCollision(); */
+    checkBulletCollision();
+    
    
  
 
@@ -321,10 +332,10 @@ function update() {
     // 3. Dibujar los elementos
     board.draw(); // Se dibuja el canvas
     actor.draw();
-    /* board.backgroundAudio() */  // PENDIENTE
     
-    drawEnemies(); // Se dibujan los Obstaculos 
-    drawSkyBoms(); // Se generan los SkyBoms
+    
+    drawEnemies();
+    drawSkyBoms(); 
     drawChips(); 
     drawScore();
     drawLives();
@@ -502,14 +513,13 @@ function checkChipsCollitions() {
             collectedChips++; 
             casinoChips.splice(chip, 1) // Se borran del CANVAS cuando hay contacto
             chip.rewardChipSound(); // Suena con colision con moneda
-            console.log(collectedChips);
+            
        } 
     })
 }
 
 
 
-// --------------------------> 6.10 Funcion GENERA BALAS (BULLETS) <-------------------
 
 
 // --------------------------> 6.11 Funcion DRAWBULLETS (BULLETS) <-------------------
@@ -519,27 +529,23 @@ function drawBullets() {
 
 
 
-// --------------------------> 6.11 Funcion CHECKBULLET COLISION (BULLETS) <-------------------
+// --------------------------> 6.11 Funcion CHECKBULLET COLISION (BALAS) <-------------------
 
 
 
-/* function checkBulletCollision() {
-    /* enemies.forEach(enemie => {
-        if(enemie.isTouchingEnemie(bullets)){
-            enemies.splice(enemie, 1)
+function checkBulletCollision() {
+   skyBombs.forEach((skyBomb, index) => {
+    bullets.forEach((bullet, i) => {
+        if(skyBomb.isTouchingBomb(bullet)){
+            skyBombs.splice(index, 1);
         }
-    }) */
-    
-   /*  bullets.forEach(bullet => {
-        if(bullet.isTouchingBullet(enemies)){
-            bullets.splice(bullet, 1)
-            console.log(enemies)
+        if(bullet.isTouchingBullet(skyBomb)){
+            bullets.splice(i, 1)
         }
     })
-} 
-
-*/
-
+        
+    })  
+}  
 
 
 
@@ -549,9 +555,6 @@ function drawBullets() {
 function clearCanvas() { // FUNCION se limpia el CANVAS
     ctx.clearRect(0, 0, $canvas.width, $canvas.height); 
 }
-
-
-
 
 
 
@@ -601,19 +604,10 @@ document.onkeyup = event => {
     switch (event.key) {
         case "Enter": // Para iniciar el juego
             start();
-           /*  if(!isGameOver){
-                board.backgroundAudio();
-            } else {
-
-            } */
             break;
         default:
         break;
     }
 }
-
-
-
-
 
 
