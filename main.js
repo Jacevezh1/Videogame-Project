@@ -189,13 +189,16 @@ class SkyFallObstacle extends Obstacle {
     isTouchingBomb(obj) { 
 		return (  // Si se incrementa '+' aumenta el margen del choque
 			this.x < obj.x + obj.width && // Limita impacto en parte trasera (37 = obj.width)
-			this.x + this.width > obj.x && // Limita impacto en parte frontal (50 = this.width)
+			this.x + 10 > obj.x && // Limita impacto en parte frontal (50 = this.width)
 			this.y < obj.y + obj.height && // Limita impacto de abajo hacia arriba  (23 = obj.heigth)
 			this.y + this.height > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
 		);
 	}
 
+
 }
+
+
 
 
 
@@ -214,7 +217,7 @@ class Chips {
     }
     
     draw() {
-        this.x-=3;
+        this.x-=1.5;
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     } 
 
@@ -420,10 +423,9 @@ function checkCollitions() {
 
 
 
-
 // --------------------------> 6.2 Funcion GENERATEOBSTACLES (MISILES) <-------------------
 function generateObstacles() { 
-    if(frames % 80 === 0) {
+    if(frames % 30 === 0) {
         const y = Math.floor(Math.random() * 470)
         const enemie = new Obstacle($canvas.width, y, 45, 45, this.image); 
         enemies.push(enemie);
@@ -443,11 +445,9 @@ function drawEnemies() {
 
 
 
-
-
 //-----------------------------> 6.4 Funcion GENERATE (SKY FALL BOMBS) <------------------
 function generateSkyFallBombs() { 
-    if (frames % 100 === 0) {
+    if (frames % 150 === 0) {
         const x = Math.floor(Math.random() * $canvas.height)
         const skyBomb = new SkyFallObstacle(x, 0, 60, 50, this.image)
         skyBombs.push(skyBomb);
@@ -459,10 +459,12 @@ function generateSkyFallBombs() {
 }
 
 
+
 //-----------------------------------> 6.5 Funcion DRAWSKYBOMBS <-----------------------------
 function drawSkyBoms(){
     skyBombs.forEach((skyBomb) => skyBomb.draw())
 }
+
 
 
 
@@ -481,10 +483,6 @@ function skyCheckCollitions() {
 
 
 
-
-
-
-
 // ------------------------> 6.7  Funcion GENERATE CHIPS (PUNTOS) <-------------------
 function generateChips() { 
     if(frames % 200 === 0){
@@ -496,12 +494,10 @@ function generateChips() {
 
 
 
-
 // --------------------------> 6.8 Funcion DRAWCHIPS (PUNTOS) <-------------------
 function drawChips() { 
     casinoChips.forEach((chip) => chip.draw());
 }
-
 
 
 
@@ -521,7 +517,6 @@ function checkChipsCollitions() {
 
 
 
-
 // --------------------------> 6.11 Funcion DRAWBULLETS (BULLETS) <-------------------
 function drawBullets() { 
     bullets.forEach((bullet) => bullet.draw());
@@ -531,17 +526,22 @@ function drawBullets() {
 
 // --------------------------> 6.11 Funcion CHECKBULLET COLISION (BALAS) <-------------------
 
-
-
 function checkBulletCollision() {
    skyBombs.forEach((skyBomb, index) => {
+    enemies.forEach((enemie, indice) => {
     bullets.forEach((bullet, i) => {
         if(skyBomb.isTouchingBomb(bullet)){
             skyBombs.splice(index, 1);
         }
+        if(enemie.isTouchingObstacle(bullet)){
+            enemies.splice(indice, 1)
+        }
         if(bullet.isTouchingBullet(skyBomb)){
             bullets.splice(i, 1)
         }
+        
+    })
+
     })
         
     })  
@@ -549,14 +549,10 @@ function checkBulletCollision() {
 
 
 
-
-
 // --------------------------> 6.12 Funcion CLEARCANVAS (CANVAS) <-------------------
 function clearCanvas() { // FUNCION se limpia el CANVAS
     ctx.clearRect(0, 0, $canvas.width, $canvas.height); 
 }
-
-
 
 
 
@@ -581,7 +577,7 @@ function checkKeys() {
                 actor.moveLeft();
                 break;
             case "w":
-                if(frames % 6 === 0){
+                if(frames % 1 === 0){
                     const bullet = new Bullet(actor.x, actor.y + 22.5)
                     bullets.push(bullet); 
                     bullet.shotSound();
@@ -598,8 +594,6 @@ function checkKeys() {
 // -------------------------> 7. Interaccion de usuario para inicar el juego <-------
 
 
-
-
 document.onkeyup = event => {
     switch (event.key) {
         case "Enter": // Para iniciar el juego
@@ -609,5 +603,7 @@ document.onkeyup = event => {
         break;
     }
 }
+
+
 
 
