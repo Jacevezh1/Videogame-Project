@@ -5,7 +5,6 @@ body{
 }
 
 
-
 h1{
  font-family: Impact;
  font-size: 80px;
@@ -41,12 +40,12 @@ h1 {
     font-size: 5rem;
 }
 
-/* p {
-    font-family: monospace;
-    font-size: x-large;
-    color: whitesmoke;
+h5 {
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    color: red;
+
 }
- */
+
 
 canvas {
     border: 20px solid whitesmoke;
@@ -72,4 +71,23 @@ button{
 
 
 
+h5 {
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    color: rgb(255, 22, 22);
+    font-size: x-large;
+}
 
+
+strong {
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    color: burlywood;
+    font-size: x-large;
+}
+
+
+
+p {
+    color: rgb(49, 102, 54);
+    font-family: monospace;
+
+}

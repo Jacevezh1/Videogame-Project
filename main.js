@@ -244,7 +244,7 @@ class Bullet {
     }
 
     shotSound(){
-        this.audio.volume = 0.3;
+        this.audio.volume = 0.25;
         this.audio.play();
     }
 
