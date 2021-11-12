@@ -12,6 +12,9 @@ let frames = 0;
 let intervalId;
 
 let enemies = [];
+let killedEnemies = [];
+
+
 let skyBombs = [];
 
 const bullets = [];
@@ -52,6 +55,9 @@ class GameAsset {
 class BackgroundBoard extends GameAsset {
 	constructor(x, y, width, height, img) {
 		super(x, y, width, height, img); 
+
+        this.audio = new Audio();
+        this.audio.src = "https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-one/transportation_aircraft_military_spitfire_flying_overhead.mp3"
 	}
 
     // En esta parte se realiza el poliformismo para contextualizar y modificar la clase padre //
@@ -69,6 +75,11 @@ class BackgroundBoard extends GameAsset {
             this.width, 
             this.height
         );
+    }
+
+    backgroundAudio(){
+        this.audio.volume = 0.2;
+        this.audio.play();
     }
 }
 
@@ -91,8 +102,8 @@ class Impostor extends GameAsset {
             this.y = $canvas.height - this.height;
         this.moveBack = 20; // Para que mi personaje se mueva hacia atras
         this.moveFoward = 10; // Para que el personaje se mueve hacia adelante
-        this.jump = 40; // Para que el personaje pueda brincar mas
-        this.down = 40; // Para que el personaje se recorra hacia abajo
+        this.jump = 20; // Para que el personaje pueda brincar mas
+        this.down = 20; // Para que el personaje se recorra hacia abajo
 
 
        
@@ -141,7 +152,7 @@ class Obstacle {
         this.height = height;
         this.image = new Image();
         this.image.src = "/images/bullet.png";
-        this.live =1; 
+        this.live = 1; 
     }
     
     draw() {
@@ -157,11 +168,7 @@ class Obstacle {
         this.y + this.height > obj.y
     )}
 
-    deadEnemy(){
-        if(bullets.isTouching(enemies)){
-            this.live-=1;
-        } 
-    };
+      
 }
 
 
@@ -176,7 +183,7 @@ class SkyFallObstacle extends Obstacle {
     }
 
     draw() {
-        this.y++;
+        this.y+=1.8;
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     }
 
@@ -197,7 +204,7 @@ class Chips {
     }
     
     draw() {
-        this.x--;
+        this.x-=3;
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     } 
 
@@ -224,17 +231,33 @@ class Bullet {
         this.width = 10;
         this.height = 5;
         this.color = "orange";
+        this.audio = new Audio();
+        this.audio.src = "https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-69838/zapsplat_warfare_gun_rifles_single_shot_designed_71743.mp3"
         this.velocity = 1;
-        /* this.image = new Image()
-        this.image.src = " " */
+        
     };
 
     draw(){
-        this.x+=3;
+        this.x+=6;
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height)
     }
 
+    shotSound(){
+        this.audio.volume = 0.3;
+        this.audio.play();
+    }
+
+    isTouchingBullet(obj) { 
+		return (  // Si se incrementa '+' aumenta el margen del choque
+			this.x < obj.x + 37 && // Limita impacto en parte trasera (37 = obj.width)
+			this.x + 50 > obj.x && // Limita impacto en parte frontal (50 = this.width)
+			this.y < obj.y + 23 && // Limita impacto de abajo hacia arriba  (23 = obj.heigth)
+			this.y + 32.5 > obj.y // Limita impacto de arriba hacia abjo (32.5 = this.heigth)
+		);
+	}
+
+ 
 }
 
 
@@ -265,6 +288,7 @@ function start() {
     if(intervalId) return; // Esto se hace para que no se encimen los intervalos y no modificar su velocidad
     intervalId = setInterval(() => {
         update();
+        board.backgroundAudio();
     }, 1000/60)
 }
 
@@ -279,23 +303,26 @@ function update() {
     generateChips(); // Genera las chips
     checkCollitions();  // Se checa si hubo colisiones
     skyCheckCollitions(); // Checa si hubo colisiones
-    checkChipsCollitions(); // Se checa si hubo colisiones entre mi moneda y mi personaje (SI = SUMA COIN)
-    /* generateBullets(); */ // NUEVO PENDIENTE
+    checkChipsCollitions();
+   /*  checkBulletCollision(); */
+   
  
 
     // 2. Limpiar el canvas
     clearCanvas();
 
     // 3. Dibujar los elementos
-    board.draw() // Se dibuja el canvas
-    actor.draw(); // Se dibuja al personaje principal
+    board.draw(); // Se dibuja el canvas
+    actor.draw();
+    /* board.backgroundAudio() */  // PENDIENTE
+    
     drawEnemies(); // Se dibujan los Obstaculos 
     drawSkyBoms(); // Se generan los SkyBoms
     drawChips(); 
     drawScore();
     drawLives();
     drawCollectedChips();
-    drawBullets(); // PENDIENTE Y NUEVO
+    drawBullets(); 
     gameOver(); 
 }
 
@@ -360,14 +387,16 @@ function checkCollitions() {
         if(actor.isTouching(enemie)){
            clearInterval(intervalId);
            isGameOver = true;
-           
         }
     });
 }
 
+
+
+
 // --------------------------> 6.2 Funcion GENERATEOBSTACLES (MISILES) <-------------------
 function generateObstacles() { 
-    if(frames % 100 === 0) {
+    if(frames % 80 === 0) {
         const y = Math.floor(Math.random() * 470)
         const enemie = new Obstacle($canvas.width, y, 45, 45, this.image); 
         enemies.push(enemie);
@@ -391,7 +420,7 @@ function drawEnemies() {
 
 //-----------------------------> 6.4 Funcion GENERATE (SKY FALL BOMBS) <------------------
 function generateSkyFallBombs() { 
-    if (frames % 200 === 0) {
+    if (frames % 100 === 0) {
         const x = Math.floor(Math.random() * $canvas.height)
         const skyBomb = new SkyFallObstacle(x, 0, 40, 40, this.image)
         skyBombs.push(skyBomb);
@@ -463,21 +492,7 @@ function checkChipsCollitions() {
 
 
 
-
-
 // --------------------------> 6.10 Funcion GENERA BALAS (BULLETS) <-------------------
-/* function generateBullets() { 
-    
-    if(frames % 60 === 0){
-        const bullet = new Bullet(actor.x + 25, actor.y);
-        bullets.push(bullet) 
-    }
-   
-    bullets.forEach((obj, index) => {
-        if(obj.x - obj.width > 0) bullets.splice(1, index)
-    })
-} */
-
 
 
 // --------------------------> 6.11 Funcion DRAWBULLETS (BULLETS) <-------------------
@@ -487,11 +502,26 @@ function drawBullets() {
 
 
 
+// --------------------------> 6.11 Funcion CHECKBULLET COLISION (BULLETS) <-------------------
 
 
 
+/* function checkBulletCollision() {
+    /* enemies.forEach(enemie => {
+        if(enemie.isTouchingEnemie(bullets)){
+            enemies.splice(enemie, 1)
+        }
+    }) */
+    
+   /*  bullets.forEach(bullet => {
+        if(bullet.isTouchingBullet(enemies)){
+            bullets.splice(bullet, 1)
+            console.log(enemies)
+        }
+    })
+} 
 
-
+*/
 
 
 
@@ -531,24 +561,17 @@ function checkKeys() {
                 actor.moveLeft();
                 break;
             case "w":
-                if(frames % 8 === 0){
+                if(frames % 1 === 0){
                     const bullet = new Bullet(actor.x, actor.y + 22.5)
                     bullets.push(bullet); 
+                    bullet.shotSound();
                 }
                 break;
             default:
             break;
         }
     }
-
-   
-    
 }
-
-
-
-
-
 
 
 
@@ -561,11 +584,18 @@ document.onkeyup = event => {
     switch (event.key) {
         case "Enter": // Para iniciar el juego
             start();
+           /*  if(!isGameOver){
+                board.backgroundAudio();
+            } else {
+
+            } */
             break;
         default:
         break;
     }
 }
+
+
 
 
 
